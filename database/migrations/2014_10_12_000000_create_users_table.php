@@ -13,10 +13,20 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('full_name');
+            $table->string('username')->unique();
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->longText("bio")->nullable();
+            $table->string("avatar")->default("https://i.pravatar.cc/300");
+            $table->string("banner")->default("https://picsum.photos/400/250");
+            $table->string("location")->nullable();
+            $table->date("dob")->nullable();
+            $table->unsignedMediumInteger("chirp_count")->default(0);
+            $table->unsignedTinyInteger("notifications_count")->default(0);
+            $table->unsignedMediumInteger("followers_count")->default(0);
+            $table->unsignedMediumInteger("followings_count")->default(0);
+            $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
