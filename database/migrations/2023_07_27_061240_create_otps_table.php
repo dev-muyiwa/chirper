@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('otps', function (Blueprint $table) {
             $table->id();
             $table->string("otp");
-            $table->foreignId('user_id')->references('id')->on('users');
+            $table->foreignUuid('user_id')->references('id')->on('users');
             $table->timestamp("expires_at")->default(Carbon::now()->addMinutes(15));
         });
     }

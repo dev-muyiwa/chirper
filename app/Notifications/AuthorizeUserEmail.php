@@ -15,7 +15,7 @@ class AuthorizeUserEmail extends Notification
      * Create a new notification instance.
      */
     public function __construct(
-        protected string $token
+        protected int $otp
     )
     {
     }
@@ -39,10 +39,10 @@ class AuthorizeUserEmail extends Notification
         return (new MailMessage)
             ->subject("Email verification")
             ->line("$app_name received a request to verify your account, $notifiable->name.")
-            ->line("Follow this link to finish setting up your account:")
-            ->action("Verify Email", route("email-verification", ["token" => $this->token]))
-            ->line('This link will expire in 15 minutes.')
-            ->line("If you didn't request for this link, you can safely ignore this mail.");
+            ->line("Use this code to finish setting up your account:")
+            ->line($this->otp)
+            ->line('This code will expire in 5 minutes.')
+            ->line("If you didn't request for this code, you can safely ignore this mail.");
     }
 
     /**

@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
+            $table->uuid("id")->primary();
             $table->string('full_name');
-            $table->string('username')->unique();
+            $table->string('handle')->unique();
             $table->string('email')->unique();
-            $table->string('password');
+            $table->string('password')->nullable();
             $table->longText("bio")->nullable();
             $table->string("avatar")->default("https://i.pravatar.cc/300");
             $table->string("banner")->default("https://picsum.photos/400/250");
@@ -27,6 +27,7 @@ return new class extends Migration
             $table->unsignedMediumInteger("followers_count")->default(0);
             $table->unsignedMediumInteger("followings_count")->default(0);
             $table->timestamp('email_verified_at')->nullable();
+            $table->string("google_id")->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

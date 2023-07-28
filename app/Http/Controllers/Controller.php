@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\CustomException;
+use Exception;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\JsonResponse;
@@ -23,7 +25,7 @@ class Controller extends BaseController
     {
         $response = [
             'status' => "success",
-            'data'    => $result,
+            'data' => $result,
             'message' => $message,
         ];
 
@@ -35,10 +37,9 @@ class Controller extends BaseController
      *
      * @param $error
      * @param string $message
-     * @param int $code
      * @return JsonResponse
      */
-    public function onFailure($error, string $message, int $code = 400): JsonResponse
+    public function onFailure($error, string $message): JsonResponse
     {
         $response = [
             'status' => "failure",
@@ -46,6 +47,13 @@ class Controller extends BaseController
             'message' => $message,
         ];
 
-        return response()->json($response, $code);
+        if ($error instanceof CustomException) {
+            return response()->json($response, $error->getStatusCode());
+        } else {
+            return response()->json($response, 500);
+        }
     }
 }
+
+
+
