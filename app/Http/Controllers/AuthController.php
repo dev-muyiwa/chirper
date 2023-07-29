@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exceptions\CustomException;
 use App\Models\User;
 use App\Notifications\AuthorizeUserEmail;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Registered;
@@ -28,7 +29,7 @@ class AuthController extends Controller
             $validator = Validator::make($input, [
                 "first_name" => "required|string",
                 "last_name" => "required|string",
-                "handle" => "required|string|unique:users,handle",
+                "display_name" => "required|string|unique:users,handle",
                 "email" => "required|email|unique:users,email",
                 "password" => "required|string|confirmed|min:8"
             ]);
@@ -39,7 +40,8 @@ class AuthController extends Controller
 
             $user = User::create([
                 "full_name" => "{$input["first_name"]} {$input["last_name"]}",
-                "handle" => $input["handle"],
+                "handle" => strtolower($input["display_name"]),
+                "display_name" => $input["display_name"],
                 "email" => $input["email"],
                 "password" => Hash::make($input["password"])
             ]);
@@ -50,22 +52,6 @@ class AuthController extends Controller
 
             return $this->onSuccess(["access_token" => $token], "Registration successful.", 201);
         } catch (Exception|CustomException $e) {
-            return $this->onFailure($e, $e->getMessage());
-        }
-    }
-
-    // Not in use. Can be used for mobile verification.
-    public function startEmailVerification(Request $request): JsonResponse
-    {
-        try {
-            $user = Auth::user();
-
-            $otp = rand(1000_000, 999_999);
-            $user->notify(new AuthorizeUserEmail($otp));
-            $user->otp()->updateOrCreate(["otp" => $otp]);
-
-            return $this->onSuccess(null, "OTP sent to {{$user->email}}");
-        } catch (Exception $e) {
             return $this->onFailure($e, $e->getMessage());
         }
     }
@@ -133,7 +119,7 @@ class AuthController extends Controller
 
             $token = $user->createToken("user_token")->plainTextToken;
 
-            return $this->onSuccess(["access_token" => $token], "Login successful");
+            return $this->onSuccess(["access_token" => $token], "Login successful.");
         } catch (Exception|CustomException $e) {
             return $this->onFailure($e, $e->getMessage());
         }
@@ -155,6 +141,7 @@ class AuthController extends Controller
                 $user = User::create([
                     "full_name" => $google_user->name,
                     "handle" => $google_user->email . $google_user->id,
+                    "display_name" => $google_user->email . $google_user->id,
                     "email" => $google_user->email,
                     "google_id" => $google_user->id,
                     "avatar" => $google_user->avatar

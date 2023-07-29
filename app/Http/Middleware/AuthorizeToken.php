@@ -21,6 +21,7 @@ class AuthorizeToken
         $user_id = $request->route()->parameter("id");
         $user = Auth::user();
 
+        // Check if the user id from the route matches the user id from the token
         if ($user->id !== $user_id && $user->handle !== $user_id) {
            return redirect(route("forbidden"));
         }

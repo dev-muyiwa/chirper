@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +27,9 @@ Route::get("/403", function () {
 })->name("forbidden");
 
 
+// Add an expiry date to the access token.
+// $table->timestamp('expires_at')->default(Carbon::now()->addDays(5)) doesn't work for some reasons.
+
 // Authentication.
 
 Route::prefix("auth")
@@ -43,18 +45,27 @@ Route::prefix("auth")
         Route::post("reset-password", "resetPassword")->name('password.reset');
     });
 
+Route::post('/email/verification-notification', [AuthController::class, 'resendNotification'])
+    ->middleware("auth:sanctum")
+    ->name('verification.send');
+
+
+
+
 // Users.
 
 Route::prefix("users")
-//    ->middleware("auth:sanctum")
+    ->middleware(["auth:sanctum", "authorizeToken"])
     ->controller(UserController::class)
     ->group(function () {
 
-        Route::get("", "users")->name("users.all");
-        Route::get("{id}", "user")->name("user");
+        Route::get("", "users")->name("users.all")->withoutMiddleware(["auth:sanctum", "authorizeToken"]);
+        Route::get("{id}", "user")->name("user")->withoutMiddleware(["auth:sanctum", "authorizeToken"]);
 
-        Route::patch("{id}", "updateUserProfile")->middleware(["auth:sanctum", "authorizeToken"]);
-        Route::patch("{id}/password", "updateUserPassword")->middleware(["auth:sanctum", "authorizeToken"]);
+        Route::patch("{id}", "updateUserProfile");
+        Route::put("{id}", "updateUserPassword");
+        Route::post("{id}/logout", "logout");
+        Route::post("{id}/logout-all", "logoutFromAllDevices");
 
         // Add the verify email endpoint.
     });
@@ -70,6 +81,6 @@ Route::group(["middleware" => ["auth:sanctum"]], function ($route) {
         ->name("home");
 
 //    $route->post('/logout', [AuthController::class, 'logout']);
-    $route->post('/email/verification-notification', [AuthController::class, 'resendNotification'])
-        ->name('verification.send');
+//    $route->post('/email/verification-notification', [AuthController::class, 'resendNotification'])
+//        ->name('verification.send');
 });
