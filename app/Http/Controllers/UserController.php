@@ -106,4 +106,98 @@ class UserController extends Controller
             return $this->onFailure($e, $e->getMessage());
         }
     }
+
+    public function getFollowers(Request $request, $handle): JsonResponse
+    {
+        try {
+            $user = User::where("handle", $handle)
+                ->orWhere("id", $handle)->first();
+            if (!$user) {
+                throw new CustomException("User not found.");
+            }
+
+            $followers = $user->followers()->get();
+
+            return $this->onSuccess($followers, "Followers fetched.");
+        } catch (Exception $e) {
+            return $this->onFailure($e, $e->getMessage());
+        }
+    }
+
+    public function getFollowings(Request $request, $handle): JsonResponse
+    {
+        try {
+            $user = User::where("handle", $handle)
+                ->orWhere("id", $handle)->first();
+            if (!$user) {
+                throw new CustomException("User not found.");
+            }
+
+            $followings = $user->followings()->get();
+
+            return $this->onSuccess($followings, "Followings fetched.");
+        } catch (Exception $e) {
+            return $this->onFailure($e, $e->getMessage());
+        }
+    }
+
+    public function followUser(Request $request): JsonResponse
+    {
+        try {
+            $handle = $request["user"];
+            $user = User::where("handle", $handle)
+                ->orWhere("id", $handle)->first();
+
+            if (!$user) {
+                throw new CustomException("User not found.");
+            }
+
+            $auth_user = Auth::user();
+
+            if ($auth_user->id === $user->id){
+                throw new CustomException("You cannot follow yourself.", CustomException::FORBIDDEN);
+            }
+
+            if (!$auth_user->followings->contains("id", $user->id)) {
+                $auth_user->increment("followings_count");
+                $user->increment("followers_count");
+                $auth_user->followings()->attach($user);
+            }
+
+
+
+            return $this->onSuccess(null, "You followed {$handle}.");
+        } catch (Exception $e) {
+            return $this->onFailure($e, $e->getMessage());
+        }
+    }
+
+    public function unfollowUser(Request $request): JsonResponse
+    {
+        try {
+            $handle = $request["user"];
+            $user = User::where("handle", $handle)
+                ->orWhere("id", $handle)->first();
+
+            if (!$user) {
+                throw new CustomException("User not found.");
+            }
+
+            $auth_user = Auth::user();
+
+            if ($auth_user === $user){
+                throw new CustomException("You cannot follow yourself.", CustomException::FORBIDDEN);
+            }
+
+            if ($auth_user->followings->contains("id", $user->id)) {
+                $auth_user->decrement("followings_count");
+                $user->decrement("followers_count");
+                $auth_user->followings()->detach($user);
+            }
+
+            return $this->onSuccess(null, "You unfollowed {$handle}.");
+        } catch (Exception $e) {
+            return $this->onFailure($e, $e->getMessage());
+        }
+    }
 }
