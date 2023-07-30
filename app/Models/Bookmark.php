@@ -6,9 +6,8 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Post extends Model
+class Bookmark extends Model
 {
     use HasFactory, HasUuids;
 
@@ -17,12 +16,7 @@ class Post extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ["title", "media"];
-
-    protected $casts = [
-        'media' => 'json',
-    ];
-
+    protected $fillable = ["post_id"];
     public $timestamps = false;
 
     public function user(): BelongsTo
@@ -30,13 +24,8 @@ class Post extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function bookmarks(): HasMany
+    public function post(): BelongsTo
     {
-        return $this->hasMany(Bookmark::class);
-    }
-
-    public function likes(): HasMany
-    {
-        return $this->hasMany(Like::class);
+        return $this->belongsTo(Post::class);
     }
 }

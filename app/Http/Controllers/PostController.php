@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\CustomException;
+use App\Models\Bookmark;
 use App\Models\Post;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -36,13 +37,22 @@ class PostController extends Controller
     {
         try {
             $post = Post::find($request["postId"]);
-            if (!$post){
-                throw new CustomException("Post not found.");
-            }
 
             $post->increment("view_count");
 
             return $this->onSuccess($post, "Post fetched.");
+        } catch (Exception $e) {
+            return $this->onFailure($e, $e->getMessage());
+        }
+    }
+
+    public function getPosts(Request $request): JsonResponse
+    {
+        try {
+            $posts = Auth::user()->posts()->paginate();
+
+
+            return $this->onSuccess($posts, "Post fetched.");
         } catch (Exception $e) {
             return $this->onFailure($e, $e->getMessage());
         }
@@ -54,14 +64,93 @@ class PostController extends Controller
             $user = Auth::user();
             $post = $user->posts()->find($request["postId"]);
 
-            if ($post) {
-                throw new CustomException("Post not found.", CustomException::NOT_FOUND);
-            }
-
             $post->delete();
             $user->decrement("chirp_count");
 
             return $this->onSuccess(null, "Post deleted.");
+        } catch (Exception $e) {
+            return $this->onFailure($e, $e->getMessage());
+        }
+    }
+
+    public function addToBookmarks(Request $request): JsonResponse
+    {
+        try {
+            $bookmark = Auth::user()->bookmarks()
+                ->where('post_id', $request["postId"])
+                ->first();
+
+            if (!$bookmark) {
+                Auth::user()->bookmarks()->create(["post_id" => $request["postId"]]);
+            }
+
+            return $this->onSuccess(null, "Added to bookmarks.");
+        } catch (Exception $e) {
+            return $this->onFailure($e, $e->getMessage());
+        }
+    }
+
+    public function removeFromBookmarks(Request $request): JsonResponse
+    {
+        try {
+            $bookmark = Auth::user()->bookmarks()
+                ->where('post_id', $request["postId"])
+                ->first();
+
+            if ($bookmark) {
+                $bookmark->delete();
+            }
+
+            return $this->onSuccess(null, "Deleted from bookmarks.");
+        } catch (Exception $e) {
+            return $this->onFailure($e, $e->getMessage());
+        }
+    }
+
+    public function getPostLikes(Request $request): JsonResponse
+    {
+        try {
+            $likes = Post::find($request["postId"])->likes()->get();
+
+            return $this->onSuccess($likes, "Post likes fetched.");
+        } catch (Exception $e) {
+            return $this->onFailure($e, $e->getMessage());
+        }
+    }
+
+    public function likePost(Request $request): JsonResponse
+    {
+        try {
+            $like = Auth::user()->likes()
+                ->where('post_id', $request["postId"])
+                ->first();
+
+            if (!$like) {
+                Auth::user()->likes()
+                    ->create(["post_id" => $request["postId"]]);
+                $like->increment("likes_count");
+            }
+
+
+            return $this->onSuccess(null, "Added to likes.");
+        } catch (Exception $e) {
+            return $this->onFailure($e, $e->getMessage());
+        }
+    }
+
+    public function unlikePost(Request $request): JsonResponse
+    {
+        try {
+            $like = Auth::user()->likes()
+                ->where('post_id', $request["postId"])
+                ->first();
+
+            if ($like) {
+                $like->delete();
+                $like->decrement("likes_count");
+            }
+
+            return $this->onSuccess(null, "Deleted from bookmarks.");
         } catch (Exception $e) {
             return $this->onFailure($e, $e->getMessage());
         }

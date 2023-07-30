@@ -95,4 +95,15 @@ class UserController extends Controller
             return $this->onFailure($e, $e->getMessage());
         }
     }
+
+    public function getBookmarks(): JsonResponse
+    {
+        try {
+            $bookmarks = Auth::user()->bookmarks()->paginate();
+
+            return $this->onSuccess($bookmarks, "User bookmarks fetched");
+        } catch (Exception $e) {
+            return $this->onFailure($e, $e->getMessage());
+        }
+    }
 }
