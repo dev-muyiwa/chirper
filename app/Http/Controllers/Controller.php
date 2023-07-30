@@ -39,7 +39,7 @@ class Controller extends BaseController
      * @param string $message
      * @return JsonResponse
      */
-    public function onFailure($error, string $message): JsonResponse
+    public function onFailure($error, string $message, $code = null): JsonResponse
     {
         $response = [
             'status' => "failure",
@@ -47,10 +47,12 @@ class Controller extends BaseController
             'message' => $message,
         ];
 
+        $code = ($code) ?: 500;
+
         if ($error instanceof CustomException) {
             return response()->json($response, $error->getStatusCode());
         } else {
-            return response()->json($response, 500);
+            return response()->json($response, $code);
         }
     }
 }
