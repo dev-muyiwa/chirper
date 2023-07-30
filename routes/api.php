@@ -51,28 +51,43 @@ Route::post('/email/verification-notification', [AuthController::class, 'resendN
     ->name('verification.send');
 
 
-// Users.
+
 
 Route::prefix("users")
     ->middleware(["auth:sanctum", "authorizeToken"])
     ->group(function () {
 
-        Route::controller(UserController::class)->group(function () {
-            Route::get("", "users")->name("users.all")->withoutMiddleware(["auth:sanctum", "authorizeToken"]);
-            Route::get("{handle}", "user")->name("user")->withoutMiddleware(["auth:sanctum", "authorizeToken"]);
+        // Users.
+        Route::controller(UserController::class)
+            ->group(function () {
+                Route::get("", "users")->name("users.all")->withoutMiddleware(["auth:sanctum", "authorizeToken"]);
+                Route::get("{handle}", "user")->name("user")->withoutMiddleware(["auth:sanctum", "authorizeToken"]);
+                Route::get("{handle}/bookmarks", "getBookmarks");
 
-            Route::patch("{handle}", "updateUserProfile");
-            Route::put("{handle}", "updateUserPassword");
-            Route::post("{handle}/logout", "logout");
-            Route::post("{handle}/logout-all", "logoutFromAllDevices");
-        });
+                Route::patch("{handle}", "updateUserProfile");
+                Route::put("{handle}", "updateUserPassword");
+                Route::post("{handle}/logout", "logout");
+                Route::post("{handle}/logout-all", "logoutFromAllDevices");
+            });
 
 
-        Route::controller(PostController::class)->group(function () {
-            Route::post("{handle}/post", "createPost");
-            Route::get("{handle}/post/{postId}", "getPost");
-            Route::delete("{handle}/post/{postId}", "deletePost")->middleware("verifyAuthor");
-        });
+        // Posts.
+        Route::controller(PostController::class)
+            ->middleware("verifyPost")
+            ->group(function () {
+                Route::get("{handle}/posts", "getPosts")->withoutMiddleware(["auth:sanctum", "authorizeToken", "verifyPost"]);
+                Route::post("{handle}/posts", "createPost")->withoutMiddleware("verifyPost");
+
+                Route::get("{handle}/posts/{postId}", "getPost")->withoutMiddleware(["auth:sanctum", "authorizeToken"]);
+                Route::delete("{handle}/posts/{postId}", "deletePost")->middleware("verifyAuthor");
+
+                Route::post("{handle}/posts/{postId}/bookmarks", "addToBookmarks");
+                Route::delete("{handle}/posts/{postId}/bookmarks", "removeFromBookmarks");
+
+                Route::get("{handle}/posts/{postId}/likes", "getPostLikes")->withoutMiddleware(["auth:sanctum", "authorizeToken"]);
+                Route::post("{handle}/posts/{postId}/likes", "likePost");
+                Route::delete("{handle}/posts/{postId}/likes", "unlikePost");
+            });
     });
 
 
