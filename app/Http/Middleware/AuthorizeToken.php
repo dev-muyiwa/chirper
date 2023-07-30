@@ -24,8 +24,11 @@ class AuthorizeToken
 
         if (!$user){
             return (new Controller)->onFailure(null, "User not found.", 404);
-
         }
+
+//        if (!$user){
+//            return (new Controller)->onFailure(null, "User not found.", 404);
+//        }
 
         if ($user->id !== $handle && $user->handle !== $handle) {
             return (new Controller)->onFailure(null, "You are not authorized to access this resource.", 403);

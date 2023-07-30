@@ -54,14 +54,19 @@ Route::post('/email/verification-notification', [AuthController::class, 'resendN
 
 
 Route::prefix("users")
-    ->middleware(["auth:sanctum", "authorizeToken"])
+    ->middleware(["auth:sanctum", "authorizeToken", "verified"])
     ->group(function () {
 
         // Users.
         Route::controller(UserController::class)
             ->group(function () {
-                Route::get("", "users")->name("users.all")->withoutMiddleware(["auth:sanctum", "authorizeToken"]);
-                Route::get("{handle}", "user")->name("user")->withoutMiddleware(["auth:sanctum", "authorizeToken"]);
+                Route::get("", "users")->name("users.all")->withoutMiddleware(["auth:sanctum", "authorizeToken", "verified"]);
+                Route::get("{handle}", "user")->name("user")->withoutMiddleware(["auth:sanctum", "authorizeToken", "verified"]);
+
+                Route::get("{handle}/followers", "getFollowers")->withoutMiddleware(["auth:sanctum", "authorizeToken", "verified"]);
+                Route::get("{handle}/followings", "getFollowings")->withoutMiddleware(["auth:sanctum", "authorizeToken", "verified"]);
+                Route::post("{handle}/follow/{user}", "followUser")->withoutMiddleware(["authorizeToken"]);
+                Route::delete("{handle}/unfollow/{user}", "unfollowUser")->withoutMiddleware(["authorizeToken"]);
                 Route::get("{handle}/bookmarks", "getBookmarks");
 
                 Route::patch("{handle}", "updateUserProfile");
@@ -75,16 +80,16 @@ Route::prefix("users")
         Route::controller(PostController::class)
             ->middleware("verifyPost")
             ->group(function () {
-                Route::get("{handle}/posts", "getPosts")->withoutMiddleware(["auth:sanctum", "authorizeToken", "verifyPost"]);
+                Route::get("{handle}/posts", "getPosts")->withoutMiddleware(["auth:sanctum", "authorizeToken", "verified", "verifyPost"]);
                 Route::post("{handle}/posts", "createPost")->withoutMiddleware("verifyPost");
 
-                Route::get("{handle}/posts/{postId}", "getPost")->withoutMiddleware(["auth:sanctum", "authorizeToken"]);
+                Route::get("{handle}/posts/{postId}", "getPost")->withoutMiddleware(["auth:sanctum", "authorizeToken", "verified"]);
                 Route::delete("{handle}/posts/{postId}", "deletePost")->middleware("verifyAuthor");
 
                 Route::post("{handle}/posts/{postId}/bookmarks", "addToBookmarks");
                 Route::delete("{handle}/posts/{postId}/bookmarks", "removeFromBookmarks");
 
-                Route::get("{handle}/posts/{postId}/likes", "getPostLikes")->withoutMiddleware(["auth:sanctum", "authorizeToken"]);
+                Route::get("{handle}/posts/{postId}/likes", "getPostLikes")->withoutMiddleware(["auth:sanctum", "authorizeToken", "verified"]);
                 Route::post("{handle}/posts/{postId}/likes", "likePost");
                 Route::delete("{handle}/posts/{postId}/likes", "unlikePost");
             });
