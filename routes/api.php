@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PostController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -50,27 +51,29 @@ Route::post('/email/verification-notification', [AuthController::class, 'resendN
     ->name('verification.send');
 
 
-
-
 // Users.
 
 Route::prefix("users")
     ->middleware(["auth:sanctum", "authorizeToken"])
-    ->controller(UserController::class)
     ->group(function () {
 
-        Route::get("", "users")->name("users.all")->withoutMiddleware(["auth:sanctum", "authorizeToken"]);
-        Route::get("{id}", "user")->name("user")->withoutMiddleware(["auth:sanctum", "authorizeToken"]);
+        Route::controller(UserController::class)->group(function () {
+            Route::get("", "users")->name("users.all")->withoutMiddleware(["auth:sanctum", "authorizeToken"]);
+            Route::get("{handle}", "user")->name("user")->withoutMiddleware(["auth:sanctum", "authorizeToken"]);
 
-        Route::patch("{id}", "updateUserProfile");
-        Route::put("{id}", "updateUserPassword");
-        Route::post("{id}/logout", "logout");
-        Route::post("{id}/logout-all", "logoutFromAllDevices");
+            Route::patch("{handle}", "updateUserProfile");
+            Route::put("{handle}", "updateUserPassword");
+            Route::post("{handle}/logout", "logout");
+            Route::post("{handle}/logout-all", "logoutFromAllDevices");
+        });
 
-        // Add the verify email endpoint.
+
+        Route::controller(PostController::class)->group(function () {
+            Route::post("{handle}/post", "createPost");
+            Route::get("{handle}/post/{postId}", "getPost");
+            Route::delete("{handle}/post/{postId}", "deletePost")->middleware("verifyAuthor");
+        });
     });
-
-
 
 
 Route::group(["middleware" => ["auth:sanctum"]], function ($route) {

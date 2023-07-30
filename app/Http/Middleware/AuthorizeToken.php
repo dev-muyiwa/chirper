@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Controllers\Controller;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,12 +19,16 @@ class AuthorizeToken
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user_id = $request->route()->parameter("id");
+        $handle = $request->route()->parameter("handle");
         $user = Auth::user();
 
-        // Check if the user id from the route matches the user id from the token
-        if ($user->id !== $user_id && $user->handle !== $user_id) {
-           return redirect(route("forbidden"));
+        if (!$user){
+            return (new Controller)->onFailure(null, "User not found.", 404);
+
+        }
+
+        if ($user->id !== $handle && $user->handle !== $handle) {
+            return (new Controller)->onFailure(null, "You are not authorized to access this resource.", 403);
         }
         return $next($request);
     }
