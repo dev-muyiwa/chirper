@@ -29,7 +29,7 @@ class AuthController extends Controller
             $validator = Validator::make($input, [
                 "first_name" => "required|string",
                 "last_name" => "required|string",
-                "display_name" => "required|string|unique:users,handle",
+                "display_name" => "required|string",
                 "email" => "required|email|unique:users,email",
                 "password" => "required|string|confirmed|min:8"
             ]);
@@ -40,7 +40,7 @@ class AuthController extends Controller
 
             $user = User::create([
                 "full_name" => "{$input["first_name"]} {$input["last_name"]}",
-                "handle" => strtolower($input["display_name"]),
+                "handle" => strtolower($input["display_name"])."_".rand(200_000, 1_000_000),
                 "display_name" => $input["display_name"],
                 "email" => $input["email"],
                 "password" => Hash::make($input["password"])
